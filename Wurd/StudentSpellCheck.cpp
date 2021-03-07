@@ -98,6 +98,7 @@ bool StudentSpellCheck::isDictionaryWord(string word)
 	TrieNode* node = &root;
 	for (char c : word)
 	{
+		c = tolower(c);
 		bool found = false;
 		for (TrieNode* branch : node->branches)
 		{

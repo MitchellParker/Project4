@@ -422,7 +422,7 @@ private:
 			// The user will overwrite an existing file.
 			std::string input;
 			const std::string prompt = "Save to file " + filename_ + " [Y/n]: ";
-			const bool save_to_file = getInput(prompt, input);
+			getInput(prompt, input);
 			if (!input.empty() && (input[0] != 'y' && input[0] != 'Y')) {
 				writeStatus("Not saving file.");
 				TextIO::move(cur_row, cur_col);

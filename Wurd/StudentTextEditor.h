@@ -22,13 +22,13 @@ public:
 	void insert(char ch);
 	void enter();
 	void getPos(int& row, int& col) const;
-	void getLines(int startRow, int numRows, std::vector<std::string>& lines) const;
+	int getLines(int startRow, int numRows, std::vector<std::string>& lines) const;
 	void undo();
 
 private:
 	int cursorX;
 	int cursorY;
-	std::list<std::string> lines;
+	std::list<std::string> document;
 	std::list<std::string>::iterator currLine;
 };
 
