@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <cctype>
+#include <clocale>
 using namespace std;
 
 SpellCheck* createSpellCheck()
@@ -16,6 +17,7 @@ StudentSpellCheck::~StudentSpellCheck() {
 }
 
 bool StudentSpellCheck::load(string dictionaryFile) {
+	std::locale::global(std::locale(""));
 	deconstructTrie(); // shouldn't really be necessary, but will prevent weird memory leaks
 	ifstream file(dictionaryFile);
 	if (!file)
@@ -145,7 +147,7 @@ vector<SpellCheck::Position> StudentSpellCheck::parseWords(const string& line)
 			}
 		}
 	}
-	if (currentWord.start != currentWord.end)
+	if (currentlyInTheMiddleOfAWord)
 		words.push_back(currentWord);
 	return words;
 }

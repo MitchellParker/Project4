@@ -12,7 +12,7 @@ TextEditor* createTextEditor(Undo* un)
 }
 
 StudentTextEditor::StudentTextEditor(Undo* undo)
-	: TextEditor(undo), cursorX(), cursorY(), document(), currLine() {
+	: TextEditor(undo), cursorCol(), cursorRow(), document(), currLine() {
 	reset();
 }
 
@@ -26,6 +26,7 @@ bool StudentTextEditor::load(string file) {
 	if (!input)
 		return false;
 	reset();
+	document.clear(); //reset() leaves one empty line that needs to go
 	string line;
 	while (getline(input, line))
 	{
@@ -38,15 +39,20 @@ bool StudentTextEditor::load(string file) {
 }
 
 bool StudentTextEditor::save(string file) {
-	return false;  // TODO
+	ofstream output(file);
+	if (!output)
+		return false;
+	for (const string& line : document)
+		output << line << endl;
+	return true;
 }
 
 void StudentTextEditor::reset() {
 	document.clear(); // O(N) since this is a linked list
 	document.push_front("");
 	currLine = document.begin();
-	cursorX = 0;
-	cursorY = 0;
+	cursorCol = 0;
+	cursorRow = 0;
 	getUndo()->clear();
 }
 
@@ -56,102 +62,97 @@ void StudentTextEditor::move(Dir dir) {
 	case Dir::UP:
 		if (currLine != document.begin())
 		{
-			cursorY--;
+			cursorRow--;
 			currLine--;
-			if (cursorX > currLine->size())
-				cursorX = currLine->size();
+			if (cursorCol > currLine->size())
+				cursorCol = currLine->size();
 		}
 		break;
 	case Dir::DOWN:
 		if (currLine != --document.end())
 		{
-			cursorY++;
+			cursorRow++;
 			currLine++;
-			if (cursorX > currLine->size())
-				cursorX = currLine->size();
+			if (cursorCol > currLine->size())
+				cursorCol = currLine->size();
 		}
 		break;
 	case Dir::LEFT:
-		if (cursorX == 0)
+		if (cursorCol == 0)
 		{
 			if (currLine != document.begin())
 			{
 				currLine--;
-				cursorY--;
-				cursorX = currLine->size();
+				cursorRow--;
+				cursorCol = currLine->size();
 			}
 		}
 		else
 		{
-			cursorX--;
+			cursorCol--;
 		}
 		break;
 	case Dir::RIGHT:
-		if (cursorX == currLine->size())
+		if (cursorCol == currLine->size())
 		{
 			if (currLine != --document.end())
 			{
 				currLine++;
-				cursorY++;
-				cursorX = 0;
+				cursorRow++;
+				cursorCol = 0;
 			}
 		}
 		else
 		{
-			cursorX++;
+			cursorCol++;
 		}
 		break;
 	case Dir::HOME:
-		currLine = document.begin();
-		cursorX = 0;
-		cursorY = 0;
+		cursorCol = 0;
 		break;
 	case Dir::END:
-		currLine = --document.end();
-		cursorX = currLine->size();
-		cursorY = document.size()-1;
+		cursorCol = currLine->size();
 		break;
 	}
 }
 
 void StudentTextEditor::del() {
-	if (cursorX < currLine->size())
+	if (cursorCol == currLine->size())
 	{
-		string& line = *currLine;
-		char ch = line[cursorX];
-		line = line.substr(0, cursorX) + line.substr(cursorX+1);
-		getUndo()->submit(Undo::Action::DELETE, cursorY, cursorX, ch);
+		if (cursorRow == document.size() - 1)
+			return;
+		join(cursorRow);
+	}
+	else
+	{
+		del(cursorRow, cursorCol);
 	}
 }
 
 void StudentTextEditor::backspace() {
-	// TODO
+	if (cursorCol == 0 && cursorRow == 0)
+		return;
+	move(Dir::LEFT);
+	del();
 }
 
 void StudentTextEditor::insert(char ch) {
-	if (ch != '\t')
-	{
-		string& line = *currLine;
-		string start = line.substr(0, cursorX);
-		string end = line.substr(cursorX);
-		line = start + ch + end;
-		cursorX++;
-		getUndo()->submit(Undo::INSERT, cursorY, cursorX, ch);
-	}
-	else
+	if (ch == '\t')
 	{
 		for (int i = 0; i < 4; i++)
 			insert(' ');
+		return;
 	}
+	insert(cursorRow, cursorCol, ch);
 }
 
 void StudentTextEditor::enter() {
-	// TODO
+	split(cursorRow, cursorCol);
 }
 
 void StudentTextEditor::getPos(int& row, int& col) const {
-	row = cursorY;
-	col = cursorX;
+	row = cursorRow;
+	col = cursorCol;
 }
 
 int StudentTextEditor::getLines(int startRow, int numRows, vector<string>& lines) const {
@@ -159,9 +160,9 @@ int StudentTextEditor::getLines(int startRow, int numRows, vector<string>& lines
 		return -1;
 	lines.clear();
 	list<string>::const_iterator iter = currLine;
-	for (int i = cursorY; i < startRow; i++)
+	for (int i = cursorRow; i < startRow; i++)
 		iter++;
-	for (int i = cursorY; i > startRow; i--)
+	for (int i = cursorRow; i > startRow; i--)
 		iter--;
 
 	for (int i = 0; i < numRows && startRow + i < document.size(); i++)
@@ -171,4 +172,72 @@ int StudentTextEditor::getLines(int startRow, int numRows, vector<string>& lines
 
 void StudentTextEditor::undo() {
 	// TODO
+}
+
+void StudentTextEditor::setPos(int row, int col)
+{
+	setPos(row);
+	cursorCol = col;
+}
+
+void StudentTextEditor::setPos(int row)
+{
+	if (row != cursorRow)
+	{
+		for (cursorRow; cursorRow < row; cursorRow++)
+			currLine++;
+		for (cursorRow; cursorRow > row; cursorRow--)
+			currLine--;
+	}
+	cursorCol = currLine->size();
+}
+
+void StudentTextEditor::insert(int row, int col, char ch, bool addToUndoStack)
+{
+	setPos(row, col);
+	string& line = *currLine;
+	string start = line.substr(0, cursorCol);
+	string end = line.substr(cursorCol);
+	line = start + ch + end;
+	cursorCol++;
+	if (addToUndoStack)
+		getUndo()->submit(Undo::Action::INSERT, cursorRow, cursorCol, ch);
+}
+
+void StudentTextEditor::del(int row, int col, bool addToUndoStack)
+{
+	setPos(row, col);
+	string& line = *currLine;
+	string start = line.substr(0, cursorCol);
+	char deleted = line.at(cursorCol);
+	string end = line.substr(cursorCol+1);
+	line = start + end;
+	if (addToUndoStack)
+		getUndo()->submit(Undo::Action::DELETE, cursorRow, cursorCol, deleted);
+}
+
+void StudentTextEditor::join(int row, int col, bool addToUndoStack)
+{
+	setPos(row, col);
+	string& line1 = *currLine;
+	string line2 = *(++currLine);
+	line1 += line2;
+	currLine = document.erase(currLine);
+	currLine--;
+	if (addToUndoStack)
+		getUndo()->submit(Undo::Action::JOIN, cursorRow, cursorCol);
+}
+
+void StudentTextEditor::split(int row, int col, bool addToUndoStack)
+{
+	setPos(row, col);
+	if (addToUndoStack)
+		getUndo()->submit(Undo::Action::SPLIT, cursorRow, cursorCol);
+	string& line = *currLine;
+	string start = line.substr(0, cursorCol);
+	string end = line.substr(cursorCol);
+	line = start;
+	currLine = document.insert(++currLine, end);
+	cursorRow++;
+	cursorCol = 0;
 }
