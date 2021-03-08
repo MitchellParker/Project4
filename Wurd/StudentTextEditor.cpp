@@ -121,7 +121,7 @@ void StudentTextEditor::del() {
 	{
 		if (cursorRow == document.size() - 1)
 			return;
-		join(cursorRow);
+		join(cursorRow, cursorCol);
 	}
 	else
 	{
@@ -143,7 +143,7 @@ void StudentTextEditor::insert(char ch) {
 			insert(' ');
 		return;
 	}
-	insert(cursorRow, cursorCol, ch);
+	insert(cursorRow, cursorCol, string(1, ch));
 }
 
 void StudentTextEditor::enter() {
@@ -171,7 +171,25 @@ int StudentTextEditor::getLines(int startRow, int numRows, vector<string>& lines
 }
 
 void StudentTextEditor::undo() {
-	// TODO
+	int row, col, count;
+	string text;
+	Undo::Action action = getUndo()->get(row, col, count, text);
+
+	switch (action)
+	{
+	case Undo::Action::DELETE:
+		del(row, col, count, false);
+		break;
+	case Undo::Action::INSERT:
+		insert(row, col, text, false);
+		break;
+	case Undo::Action::SPLIT:
+		split(row, col, false);
+		break;
+	case Undo::Action::JOIN:
+		join(row, col, false);
+		break;
+	}
 }
 
 void StudentTextEditor::setPos(int row, int col)
@@ -192,25 +210,27 @@ void StudentTextEditor::setPos(int row)
 	cursorCol = currLine->size();
 }
 
-void StudentTextEditor::insert(int row, int col, char ch, bool addToUndoStack)
+void StudentTextEditor::insert(int row, int col, string text, bool addToUndoStack)
 {
 	setPos(row, col);
 	string& line = *currLine;
 	string start = line.substr(0, cursorCol);
 	string end = line.substr(cursorCol);
-	line = start + ch + end;
-	cursorCol++;
+	line = start + text + end;
 	if (addToUndoStack)
-		getUndo()->submit(Undo::Action::INSERT, cursorRow, cursorCol, ch);
+	{
+		cursorCol++;
+		getUndo()->submit(Undo::Action::INSERT, cursorRow, cursorCol, text.at(0));
+	}
 }
 
-void StudentTextEditor::del(int row, int col, bool addToUndoStack)
+void StudentTextEditor::del(int row, int col, int toBeDeleted, bool addToUndoStack)
 {
 	setPos(row, col);
 	string& line = *currLine;
 	string start = line.substr(0, cursorCol);
 	char deleted = line.at(cursorCol);
-	string end = line.substr(cursorCol+1);
+	string end = line.substr(cursorCol+toBeDeleted);
 	line = start + end;
 	if (addToUndoStack)
 		getUndo()->submit(Undo::Action::DELETE, cursorRow, cursorCol, deleted);

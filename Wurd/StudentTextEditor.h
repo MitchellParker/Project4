@@ -40,12 +40,12 @@ private:
 	// Inserts toBeInserted at position (row, col) Afterwards, the cursor
 	// goes 1 position after the last inserted character
 	// Set addToUndoStack to false if the action should not be added to undo stack
-	void insert(int row, int col, char ch, bool addToUndoStack = true);
+	void insert(int row, int col, std::string text, bool addToUndoStack = true);
 
 	// Removes numToBeDeleted chars from the document. Afterwards, the cursor
 	// goes 1 position after the last deleted character.
 	// Set addToUndoStack to false if the action should not be added to undo stack
-	void del(int row, int col, bool addToUndoStack = true);
+	void del(int row, int col, int toBeDeleted = 1, bool addToUndoStack = true);
 
 	// Combine the specified row with the row immediately after. Afterwards,
 	// the cursor goes to the first position after the join.

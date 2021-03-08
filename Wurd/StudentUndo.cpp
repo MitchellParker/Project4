@@ -38,9 +38,33 @@ void StudentUndo::submit(const Action action, int row, int col, char ch) {
 }
 
 StudentUndo::Action StudentUndo::get(int &row, int &col, int& count, std::string& text) {
-    return Action::ERROR;  // TODO
+	if (edits.empty())
+		return Action::ERROR;
+	Edit e = edits.top();
+	edits.pop();
+	row = e.row;
+	col = e.col;
+	count = 1;
+	text = "";
+	switch (e.action)
+	{
+	case INSERT:
+		col -= e.text.size();
+		count = e.text.size();
+		return Action::DELETE;
+	case DELETE:
+		text = e.text;
+		return Action::INSERT;
+	case SPLIT:
+		return Action::JOIN;
+	case JOIN:
+		return Action::SPLIT;
+	default:
+		return Action::ERROR;
+	}
 }
 
 void StudentUndo::clear() {
-	// TODO
+	while (!edits.empty())
+		edits.pop();
 }

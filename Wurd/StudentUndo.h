@@ -22,6 +22,9 @@ private:
 	};
 
 	// Stores the most recent edits in order, so that they may later be undone
+	// Insertions and deletions are batched if they occur consecutively
+	// The col of a batched deletion is that of the furthest left item deleted
+	// The col of a batched insertion is that of the furthest right item inserted
 	std::stack<Edit> edits;
 };
 
