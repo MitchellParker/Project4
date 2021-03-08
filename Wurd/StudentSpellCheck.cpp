@@ -17,7 +17,7 @@ StudentSpellCheck::~StudentSpellCheck() {
 }
 
 bool StudentSpellCheck::load(string dictionaryFile) {
-	std::locale::global(std::locale(""));
+	std::locale::global(std::locale("")); // stolen shamelessly from StackOverflow, lets it not crash processing weird chars
 	deconstructTrie(); // shouldn't really be necessary, but will prevent weird memory leaks
 	ifstream file(dictionaryFile);
 	if (!file)
@@ -32,7 +32,10 @@ bool StudentSpellCheck::spellCheck(string word, int max_suggestions, vector<stri
 	if (isDictionaryWord(word))
 		return true;
 	suggestions.clear();
-	// TODO find sugesstions for incorrect word
+	vector<string> allSuggestions;
+	findSuggestions(word, allSuggestions); // O(L^2)
+	for (int i = 0; i < max_suggestions && i < allSuggestions.size(); i++) // O(max_suggestions)
+		suggestions.push_back(allSuggestions[i]);
 	return false;
 }
 
@@ -152,3 +155,30 @@ vector<SpellCheck::Position> StudentSpellCheck::parseWords(const string& line)
 	return words;
 }
 
+void StudentSpellCheck::findSuggestions(string word, vector<string>& suggestions)
+{
+	TrieNode* node = &root;
+	for (int i = 0; i < word.size(); i++) // O(L)
+	{
+		char c = tolower(word.at(i));
+		TrieNode* next = nullptr;
+		for (TrieNode* branch : node->branches)
+		{
+			if (c == branch->ch)
+				next = branch;
+			else
+			{
+				string potentialSuggestion = word.substr(0, i) + branch->ch + word.substr(i + 1);
+				if (isDictionaryWord(potentialSuggestion)) // O(L)
+					suggestions.push_back(potentialSuggestion);
+			}
+		}
+		if (next == nullptr) // no branches from this node match the current char in word
+			return;
+		node = next;
+	}
+	// all chars in word appear in order in the trie
+	for (TrieNode* branch : node->branches)
+		if (branch->ch == '~') // this should never happen, but I guess a word can be its own suggestion
+			suggestions.push_back(word);
+}

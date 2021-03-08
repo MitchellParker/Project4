@@ -47,6 +47,8 @@ private:
 	// A word is a combination of letters and apostrophes. All other symbols separate two words.
 	std::vector<Position> parseWords(const std::string& line);
 
+	void findSuggestions(std::string word, std::vector<std::string>& suggestions);
+	//std::vector<std::string> findSuggestions(std::string word, std::string suggestion, TrieNode* node, int errors);
 };
 
 #endif  // STUDENTSPELLCHECK_H_
