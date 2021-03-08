@@ -261,7 +261,5 @@ void StudentTextEditor::split(int row, int col, bool addToUndoStack)
 	cursorRow++;
 	cursorCol = 0;
 	if (!addToUndoStack)
-	{
 		setPos(cursorRow - 1);
-	}
 }
