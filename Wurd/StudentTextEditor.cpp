@@ -260,4 +260,8 @@ void StudentTextEditor::split(int row, int col, bool addToUndoStack)
 	currLine = document.insert(++currLine, end);
 	cursorRow++;
 	cursorCol = 0;
+	if (!addToUndoStack)
+	{
+		setPos(cursorRow - 1);
+	}
 }
