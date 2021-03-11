@@ -40,14 +40,39 @@ bool StudentSpellCheck::spellCheck(string word, int max_suggestions, vector<stri
 }
 
 void StudentSpellCheck::spellCheckLine(const string& line, vector<SpellCheck::Position>& problems) {
-	vector<Position> wordPositions = parseWords(line);
-	problems.clear();
-	for (Position& wp : wordPositions)
+	bool currentlyInTheMiddleOfAWord = false;
+	Position wordPosition;
+	string word = "";
+	for (int i = 0; i < line.size(); i++)
 	{
-		string word = line.substr(wp.start, wp.end - wp.start + 1);
-		if (!isDictionaryWord(word))
-			problems.push_back(wp);
+		if (currentlyInTheMiddleOfAWord)
+		{
+			if (isalpha(line[i]) || line[i] == '\'')
+			{	// i is in the middle of a word
+				wordPosition.end++;
+				word.push_back(line[i]);
+			}
+			else
+			{	// i is right after the end of the word
+				if (!isDictionaryWord(word))
+					problems.push_back(wordPosition);
+				currentlyInTheMiddleOfAWord = false;
+				word = "";
+			}
+		}
+		else
+		{
+			if (isalpha(line[i]) || line[i] == '\'')
+			{	// i is first char of a word
+				wordPosition.start = i;
+				wordPosition.end = i;
+				word.push_back(line[i]);
+				currentlyInTheMiddleOfAWord = true;
+			}
+		}
 	}
+	if (currentlyInTheMiddleOfAWord && !isDictionaryWord(word))
+		problems.push_back(wordPosition);
 }
 
 void StudentSpellCheck::addWord(string word)
@@ -119,40 +144,6 @@ bool StudentSpellCheck::isDictionaryWord(string word)
 	}
 	// all chars in word appear in order in the trie, followed by '~'
 	return true;
-}
-
-vector<SpellCheck::Position> StudentSpellCheck::parseWords(const string& line)
-{
-	vector<Position> words;
-	bool currentlyInTheMiddleOfAWord = false;
-	Position currentWord;
-	for (int pos = 0; pos < line.size(); pos++)
-	{
-		if (currentlyInTheMiddleOfAWord)
-		{
-			if (isalpha(line[pos]) || line[pos] == '\'')
-			{
-				currentWord.end++;
-			}
-			else
-			{
-				words.push_back(currentWord);
-				currentlyInTheMiddleOfAWord = false;
-			}
-		}
-		else
-		{
-			if (isalpha(line[pos]) || line[pos] == '\'')
-			{
-				currentWord.start = pos;
-				currentWord.end = pos;
-				currentlyInTheMiddleOfAWord = true;
-			}
-		}
-	}
-	if (currentlyInTheMiddleOfAWord)
-		words.push_back(currentWord);
-	return words;
 }
 
 void StudentSpellCheck::findSuggestions(string word, vector<string>& suggestions)

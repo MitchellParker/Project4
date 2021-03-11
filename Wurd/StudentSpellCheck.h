@@ -42,11 +42,6 @@ private:
 	// Any non-letter, non-' symbols in word will cause this to return false
 	bool isDictionaryWord(std::string word);
 
-	// From a line of text, returns the position (start and end inclusive) of each word in
-	// the string, in the order they appear in line
-	// A word is a combination of letters and apostrophes. All other symbols separate two words.
-	std::vector<Position> parseWords(const std::string& line);
-
 	void findSuggestions(std::string word, std::vector<std::string>& suggestions);
 	//std::vector<std::string> findSuggestions(std::string word, std::string suggestion, TrieNode* node, int errors);
 };
