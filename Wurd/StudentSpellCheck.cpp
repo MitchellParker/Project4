@@ -40,6 +40,7 @@ bool StudentSpellCheck::spellCheck(string word, int max_suggestions, vector<stri
 }
 
 void StudentSpellCheck::spellCheckLine(const string& line, vector<SpellCheck::Position>& problems) {
+	problems.clear();
 	bool currentlyInTheMiddleOfAWord = false;
 	Position wordPosition;
 	string word = "";

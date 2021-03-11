@@ -40,6 +40,7 @@ private:
 
 	// Returns true if word (case insensitive) is in the dictionary trie, false otherwise.
 	// Any non-letter, non-' symbols in word will cause this to return false
+	// Guaranteed to run in O(L) time, where l is the length of the word being checked
 	bool isDictionaryWord(std::string word);
 
 	void findSuggestions(std::string word, std::vector<std::string>& suggestions);

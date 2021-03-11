@@ -35,6 +35,8 @@ bool StudentTextEditor::load(string file) {
 		document.push_back(line);
 	}
 	currLine = document.begin();
+	if (document.empty())
+		reset();
 	return true;
 }
 
