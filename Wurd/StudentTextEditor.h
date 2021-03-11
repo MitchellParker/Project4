@@ -26,9 +26,21 @@ public:
 	void undo();
 
 private:
+	// The column number that the cursor is at
+	//Should be modified anytime the cursor needs to change column
 	int cursorCol;
+	// The row number that the cursor is at
+	// Should be modified anytime the cursor needs to change row
 	int cursorRow;
+
+	// The storage for the document currently being edited
+	// Each line is stored as a string, and the whole document is a list of all lines in order
+	// Each line string does NOT have a '\n' or similar at the end (an empty line is the empty string)
+	// The document is guaranteed to have at least one line (ie never empty)
+	// Instead, a blank document (like after a reset()) has a single empty line 
 	std::list<std::string> document;
+	// An iterator to the row that the cursor is at
+	// Should be modified anytime the cursor needs to change row
 	std::list<std::string>::iterator currLine;
 
 	// Sets the cursor and currLine to the specified row and col (Expensive! use sparingly)

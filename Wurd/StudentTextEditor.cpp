@@ -30,7 +30,7 @@ bool StudentTextEditor::load(string file) {
 	string line;
 	while (getline(input, line))
 	{
-		if (!line.empty() && line.back() == '\r')
+		if (!line.empty() && line.back() == '\r') //lines may end in '\r', which is ignored
 			line.pop_back();
 		document.push_back(line);
 	}
@@ -40,7 +40,7 @@ bool StudentTextEditor::load(string file) {
 
 bool StudentTextEditor::save(string file) {
 	ofstream output(file);
-	if (!output)
+	if (!output) //unable to open file
 		return false;
 	for (const string& line : document)
 		output << line << endl;
